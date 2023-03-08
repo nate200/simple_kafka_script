@@ -1,0 +1,80 @@
+version: '3'
+
+services:
+
+  kraft-broker1:
+    image: confluentinc/cp-kafka
+    hostname: kraft-broker1
+    container_name: kraft-broker1
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    #networks:
+      #- my-kraft-cluster
+    volumes:
+      - /tmp/kraft/kraft-combined-logs-1:/etc/kafka/kraft-combined-logs-1:rw
+      - ./clusterIdAssignor.sh:/tmp/clusterIdAssignor.sh
+      - /tmp/kraft/cluster_id.txt:/tmp/cluster_id.txt:ro
+    environment:
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_LISTENERS: CLIENT://:9092,BROKER://:19092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: CLIENT://localhost:9092,BROKER://kraft-broker1:19092
+      KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,CLIENT:PLAINTEXT,BROKER:PLAINTEXT
+      KAFKA_LOG_DIRS: /etc/kafka/kraft-combined-logs-1  
+    command: "bash -c 'if [ ! -f /tmp/clusterIdAssignor.sh ]; then echo \"ERROR: Did you forget the clusterIdAssignor.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/clusterIdAssignor.sh && /etc/confluent/docker/run ; fi'"
+
+  kraft-broker2:
+    image: confluentinc/cp-kafka
+    hostname: kraft-broker2
+    container_name: kraft-broker2
+    ports:
+      - "9094:9094"
+    #networks:
+      #- my-kraft-cluster
+    volumes:
+      - /tmp/kraft/kraft-combined-logs-2:/etc/kafka/kraft-combined-logs-2:rw
+      - ./clusterIdAssignor.sh:/tmp/clusterIdAssignor.sh
+      - /tmp/kraft/cluster_id.txt:/tmp/cluster_id.txt:ro
+    environment:
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_NODE_ID: 2  
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kraft-broker1:9093
+      KAFKA_LISTENERS: CLIENT://:9094,BROKER://:19094
+      KAFKA_ADVERTISED_LISTENERS: CLIENT://localhost:9094,BROKER://kraft-broker2:19094
+      KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,CLIENT:PLAINTEXT,BROKER:PLAINTEXT
+      KAFKA_LOG_DIRS: /etc/kafka/kraft-combined-logs-2
+    command: "bash -c 'if [ ! -f /tmp/clusterIdAssignor.sh ]; then echo \"ERROR: Did you forget the clusterIdAssignor.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/clusterIdAssignor.sh && /etc/confluent/docker/run ; fi'"
+    depends_on:
+      - kraft-broker1
+
+  kraft-broker3:
+    image: confluentinc/cp-kafka
+    hostname: kraft-broker3
+    container_name: kraft-broker3
+    ports:
+      - "9095:9095"
+    #networks:
+      #- my-kraft-cluster
+    volumes:
+      - /tmp/kraft/kraft-combined-logs-3:/etc/kafka/kraft-combined-logs-3:rw
+      - ./clusterIdAssignor.sh:/tmp/clusterIdAssignor.sh
+      - /tmp/kraft/cluster_id.txt:/tmp/cluster_id.txt:ro
+    environment:
+      KAFKA_PROCESS_ROLES: broker
+      KAFKA_NODE_ID: 3   
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kraft-broker1:9093
+      KAFKA_LISTENERS: CLIENT://:9095,BROKER://:19095
+      KAFKA_ADVERTISED_LISTENERS: CLIENT://localhost:9095,BROKER://kraft-broker3:19095
+      KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,CLIENT:PLAINTEXT,BROKER:PLAINTEXT
+      KAFKA_LOG_DIRS: /etc/kafka/kraft-combined-logs-3
+    command: "bash -c 'if [ ! -f /tmp/clusterIdAssignor.sh ]; then echo \"ERROR: Did you forget the clusterIdAssignor.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/clusterIdAssignor.sh && /etc/confluent/docker/run ; fi'"
+    depends_on:
+      - kraft-broker1
