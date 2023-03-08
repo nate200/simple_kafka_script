@@ -7,5 +7,7 @@ sed -i '/KAFKA_ZOOKEEPER_CONNECT/d' /etc/confluent/docker/configure
 # Docker workaround: Ignore cub zk-ready
 sed -i 's/cub zk-ready/echo ignore zk-ready/' /etc/confluent/docker/ensure
 
+
+CLUSTER_ID=$(cat /tmp/cluster_id.txt)
 # KRaft required step: Format the storage directory with a new cluster ID
-echo "kafka-storage format --ignore-formatted --cluster-id=$(kafka-storage random-uuid) -c /etc/kafka/kafka.properties" >> /etc/confluent/docker/ensure
+echo "kafka-storage format --ignore-formatted --cluster-id=$CLUSTER_ID -c /etc/kafka/kafka.properties" >> /etc/confluent/docker/ensure
